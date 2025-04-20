@@ -19,6 +19,7 @@
         border: 2px solid black;
         cursor: crosshair;
         border-radius: 10px;
+        touch-action: none;
       }
       .toolbar {
         width: 252px;
@@ -280,6 +281,58 @@
       let lastY = 0;
       let currentLineWidth = 3; //1,3,5
       let currentEraserWidth = 12; //8,12,16
+
+      canvas.addEventListener("pointerdown", (event) => {
+        candrawing = true;
+        const rect = canvas.getBoundingClientRect();
+        lastX = event.clientX - rect.left;
+        lastY = event.clientY - rect.top;
+      });
+
+      canvas.addEventListener("pointermove", (event) => {
+        if (stamina < 1) return;
+        if (!candrawing) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const currentX = event.clientX - rect.left;
+        const currentY = event.clientY - rect.top;
+
+        if (erasing) {
+          ctx.globalCompositeOperation = "destination-out";
+          ctx.lineWidth = currentEraserWidth;
+        } else {
+          ctx.globalCompositeOperation = "source-over";
+          ctx.lineWidth = currentLineWidth;
+        }
+
+        ctx.strokeStyle = colorPicker.value;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(currentX, currentY);
+        ctx.stroke();
+
+        lastX = currentX;
+        lastY = currentY;
+
+        if (erasing) {
+          if (totalGoresan > 0) {
+            totalGoresan -= currentEraserWidth / 5;
+            kurangiStamina(currentLineWidth);
+          }
+        } else {
+          totalGoresan += currentLineWidth;
+          kurangiStamina(currentLineWidth);
+        }
+      });
+
+      canvas.addEventListener("pointerup", () => {
+        candrawing = false;
+      });
+
+      canvas.addEventListener("pointerleave", () => {
+        candrawing = false;
+      });
 
       canvas.addEventListener("mousedown", (event) => {
         candrawing = true;
